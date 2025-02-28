@@ -71,6 +71,15 @@
             color: #4b6b8f;
             margin-top: 20px;
         }
+        .grand-total {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d9534f;
+            margin-top: 30px;
+            padding: 15px;
+            background: #ffe5e5;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -78,6 +87,7 @@
         <h1>Календарь зарплаты</h1>
         <div class="calendar" id="calendar"></div>
         <div id="details"></div>
+        <div id="grandTotal" class="grand-total">Общая сумма: 0 грн</div>
     </div>
     <script>
         const items = {
@@ -123,6 +133,7 @@
                 });
             });
             details.innerHTML += `<div class='total'>Заработано за день: ${total} грн</div>`;
+            updateGrandTotal();
         }
 
         function updateData(category, item, weight) {
@@ -133,7 +144,21 @@
             renderDetails();
         }
 
+        function updateGrandTotal() {
+            let grandTotal = 0;
+            Object.keys(data).forEach(day => {
+                Object.keys(data[day]).forEach(category => {
+                    Object.keys(data[day][category]).forEach(item => {
+                        const weight = parseFloat(data[day][category][item]) || 0;
+                        grandTotal += weight * items[category][item];
+                    });
+                });
+            });
+            document.getElementById("grandTotal").textContent = `Общая сумма: ${grandTotal} грн`;
+        }
+
         renderCalendar();
+        updateGrandTotal();
     </script>
 </body>
 </html>
