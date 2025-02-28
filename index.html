@@ -1,0 +1,139 @@
+<!DOCTYPE html> 
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь зарплаты</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4b6b8f;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .calendar button {
+            padding: 10px;
+            border: none;
+            background: #4b6b8f;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .calendar button:hover {
+            background: #355070;
+        }
+        .category {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #e0e7ff;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        input {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            text-align: center;
+            width: 60px;
+        }
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4b6b8f;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Календарь зарплаты</h1>
+        <div class="calendar" id="calendar"></div>
+        <div id="details"></div>
+    </div>
+    <script>
+        const items = {
+            "Дрожжи": { "Фрукта": 4, "Яблочный штрудель": 5, "Мак": 8, "Творог": 5, "Капуста": 14, "Картошка": 11, "Синобон": 14, "Пицца": 12, "Кальцоне": 14, "Турка": 12, "Плетенка": 12, "Шашлык": 14, "Печень": 10, "Сосиска": 4 },
+            "Слойка": { "Хачик": 10, "Чебурек": 10, "Кур/Гриб": 21, "Сендвич": 14, "Самса": 14, "Сыр тв.": 2.5, "Сыр рулет": 5, "Курица ананас": 12, "Грибы": 9, "Шпинат": 9, "Крученик": 10 },
+            "Отгрузка": { "Филе": 9, "Капуста": 14, "К. сладк": 14, "Соус": 8, "Отбивные": 24 },
+            "Другое": { "Мак": 13, "Котлеты": 13 }
+        };
+        const data = JSON.parse(localStorage.getItem('salaryData')) || {};
+        let selectedDate = null;
+
+        function renderCalendar() {
+            const calendar = document.getElementById("calendar");
+            calendar.innerHTML = "";
+            for (let i = 1; i <= 31; i++) {
+                const btn = document.createElement("button");
+                btn.textContent = i;
+                btn.onclick = () => selectDate(i);
+                calendar.appendChild(btn);
+            }
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            renderDetails();
+        }
+
+        function renderDetails() {
+            const details = document.getElementById("details");
+            details.innerHTML = `<h2>День: ${selectedDate}</h2>`;
+            let total = 0;
+            Object.keys(items).forEach(category => {
+                details.innerHTML += `<div class='category'>${category}</div>`;
+                Object.keys(items[category]).forEach(item => {
+                    const value = data[selectedDate]?.[category]?.[item] || "";
+                    details.innerHTML += `
+                        <div class='item'>
+                            <span>${item} (${items[category][item]} грн/кг):</span>
+                            <input type='number' min='0' value='${value}'
+                                onchange='updateData("${category}", "${item}", this.value)'>
+                        </div>`;
+                    total += (parseFloat(value) || 0) * items[category][item];
+                });
+            });
+            details.innerHTML += `<div class='total'>Заработано за день: ${total} грн</div>`;
+        }
+
+        function updateData(category, item, weight) {
+            if (!data[selectedDate]) data[selectedDate] = {};
+            if (!data[selectedDate][category]) data[selectedDate][category] = {};
+            data[selectedDate][category][item] = weight;
+            localStorage.setItem('salaryData', JSON.stringify(data));
+            renderDetails();
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
