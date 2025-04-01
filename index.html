@@ -80,11 +80,31 @@
             background: #ffe5e5;
             border-radius: 10px;
         }
+        .month-nav {
+            margin-bottom: 20px;
+        }
+        .month-nav button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: #4b6b8f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .month-nav button:hover {
+            background: #355070;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Календарь зарплаты</h1>
+        <div class="month-nav">
+            <button onclick="changeMonth(-1)">Предыдущий</button>
+            <span id="currentMonth"></span>
+            <button onclick="changeMonth(1)">Следующий</button>
+        </div>
         <div class="calendar" id="calendar"></div>
         <div id="details"></div>
         <div id="grandTotal" class="grand-total">Общая сумма: 0 грн</div>
@@ -98,11 +118,17 @@
         };
         const data = JSON.parse(localStorage.getItem('salaryData')) || {};
         let selectedDate = null;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
 
         function renderCalendar() {
             const calendar = document.getElementById("calendar");
             calendar.innerHTML = "";
-            for (let i = 1; i <= 31; i++) {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            document.getElementById("currentMonth").textContent = 
+                new Date(currentYear, currentMonth).toLocaleString('ru', { month: 'long', year: 'numeric' });
+            
+            for (let i = 1; i <= daysInMonth; i++) {
                 const btn = document.createElement("button");
                 btn.textContent = i;
                 btn.onclick = () => selectDate(i);
@@ -110,14 +136,29 @@
             }
         }
 
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            selectedDate = null;
+            renderCalendar();
+            document.getElementById("details").innerHTML = "";
+            updateGrandTotal();
+        }
+
         function selectDate(date) {
-            selectedDate = date;
+            selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
             renderDetails();
         }
 
         function renderDetails() {
             const details = document.getElementById("details");
-            details.innerHTML = `<h2>День: ${selectedDate}</h2>`;
+            details.innerHTML = `<h2>День: ${selectedDate.split('-')[2]}</h2>`;
             let total = 0;
             Object.keys(items).forEach(category => {
                 details.innerHTML += `<div class='category'>${category}</div>`;
@@ -147,12 +188,15 @@
         function updateGrandTotal() {
             let grandTotal = 0;
             Object.keys(data).forEach(day => {
-                Object.keys(data[day]).forEach(category => {
-                    Object.keys(data[day][category]).forEach(item => {
-                        const weight = parseFloat(data[day][category][item]) || 0;
-                        grandTotal += weight * items[category][item];
+                const [year, month] = day.split('-');
+                if (parseInt(year) === currentYear && parseInt(month) === currentMonth + 1) {
+                    Object.keys(data[day]).forEach(category => {
+                        Object.keys(data[day][category]).forEach(item => {
+                            const weight = parseFloat(data[day][category][item]) || 0;
+                            grandTotal += weight * items[category][item];
+                        });
                     });
-                });
+                }
             });
             document.getElementById("grandTotal").textContent = `Общая сумма: ${grandTotal} грн`;
         }
