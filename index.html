@@ -260,7 +260,7 @@
                 if (parseInt(year) === currentYear && parseInt(month) === currentMonth + 1) {
                     Object.keys(data[day]).forEach(category => {
                         Object.keys(data[day][category]).forEach(item => {
-                            const weight = parseFloat(data[day][category][item]) || 0;
+                            const weight = Number(data[day][category][item]) || 0; // ИСПРАВЛЕНО
                             grandTotal += weight * items[category][item];
                         });
                     });
